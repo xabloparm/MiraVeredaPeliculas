@@ -26,7 +26,7 @@ public class InfoPeliculas extends AppCompatActivity {
         setContentView(R.layout.detalle_activity);
 
         Bundle extra = getIntent().getExtras();
-        Pelicula pelicula = (Pelicula) extra.getSerializable("pais");
+        Pelicula pelicula = (Pelicula) extra.getSerializable("pelicula");
 
         banderita = findViewById(R.id.banderita);
         nombreP = findViewById(R.id.nombreP);

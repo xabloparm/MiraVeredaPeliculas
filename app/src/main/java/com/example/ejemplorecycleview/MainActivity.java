@@ -1,17 +1,13 @@
 package com.example.ejemplorecycleview;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.CompoundButton;
 import android.widget.Switch;
-import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
@@ -21,7 +17,6 @@ import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 
 import java.util.ArrayList;
@@ -33,12 +28,12 @@ import model.Pelicula;
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
     private List<Pelicula> peliculas;
+    public static List<Pelicula> peliculasFavoritas = new ArrayList<>();
+    private List<Pelicula> peliculasVisibles = new ArrayList<>();
     private RecyclerView recyclerView;
-    private FloatingActionButton anyadir;
-    Context context = this;
-
+    private Context context = this;
     private Switch order;
-
+    private AdaptadorRV adaptador;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,153 +46,138 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             return insets;
         });
 
-
         peliculas = new ArrayList<>(List.of(
+                new Pelicula("Fantastic Mr. Fox",
+                        "https://pics.filmaffinity.com/fantastic_mr_fox-975530423-mmed.jpg",
+                        "Una divertida y original animación en stop-motion dirigida por Wes Anderson, basada en el cuento de Roald Dahl, que narra las aventuras de un astuto zorro enfrentándose a granjeros codiciosos para proteger a su familia.",
+                        7.8, 7.5, 93),
 
-                new Pelicula("Cinema Paradiso",
-                        "https://pics.filmaffinity.com/nuovo_cinema_paradiso-312728781-mmed.jpg",
-                        "Un homenaje al amor por el cine y a la nostalgia de la infancia en la Italia rural."),
+                new Pelicula("End of Watch",
+                        "https://pics.filmaffinity.com/end_of_watch-740750376-mmed.jpg",
+                        "Un intenso y realista thriller policiaco que sigue la vida de dos agentes de Los Ángeles, mostrando su amistad y los peligros diarios a los que se enfrentan en los barrios más conflictivos.",
+                        6.8, 7.2, 85),
 
-                new Pelicula("El viaje de Chihiro",
-                        "https://pics.filmaffinity.com/sen_to_chihiro_no_kamikakushi-348587850-mmed.jpg",
-                        "Una joya del Studio Ghibli que mezcla folklore japonés con una poderosa crítica social."),
+                new Pelicula("La La Land",
+                        "https://pics.filmaffinity.com/la_la_land-262021831-mmed.jpg",
+                        "Un vibrante homenaje a los musicales clásicos que mezcla amor, sueños y sacrificios en una deslumbrante historia ambientada en la ciudad de Los Ángeles, protagonizada por dos jóvenes artistas.",
+                        7.8, 8.0, 91),
 
-                new Pelicula("Amélie",
-                        "https://pics.filmaffinity.com/le_fabuleux_destin_d_amelie_poulain-848337470-mmed.jpg",
-                        "Una oda al optimismo cotidiano y la magia de los pequeños gestos en París."),
+                new Pelicula("Pulp Fiction",
+                        "https://pics.filmaffinity.com/pulp_fiction-210382116-mmed.jpg",
+                        "La icónica obra maestra de Quentin Tarantino que entrelaza varias historias criminales de forma no lineal, repleta de diálogos memorables, humor negro y una estética única que redefinió el cine moderno.",
+                        8.6, 8.5, 92),
 
-                new Pelicula("Pather Panchali",
-                        "https://pics.filmaffinity.com/pather_panchali-964622442-mmed.jpg",
-                        "Película india que retrata con sensibilidad la pobreza rural y la inocencia infantil."),
+                new Pelicula("Se7en",
+                        "https://pics.filmaffinity.com/seven_se7en-734875211-mmed.jpg",
+                        "Un oscuro y perturbador thriller en el que dos detectives deben atrapar a un asesino en serie que comete atroces crímenes inspirados en los siete pecados capitales, llevándolos a un desenlace impactante.",
+                        8.1, 8.3, 82),
 
-                new Pelicula("El laberinto del fauno",
-                        "https://pics.filmaffinity.com/el_laberinto_del_fauno-222302534-mmed.jpg",
-                        "Fantasía oscura ambientada en la posguerra española, donde la imaginación choca con la violencia."),
+                new Pelicula("Django Unchained",
+                        "https://pics.filmaffinity.com/django_unchained-956246347-mmed.jpg",
+                        "Un salvaje y estilizado western de Tarantino que sigue a un esclavo liberado en su misión de rescatar a su esposa, enfrentándose a terratenientes y cazadores de esclavos en el sur de los Estados Unidos.",
+                        7.9, 8.1, 87),
 
-                new Pelicula("Rashomon",
-                        "https://pics.filmaffinity.com/rashomon-166287858-mmed.jpg",
-                        "Una obra maestra japonesa sobre la verdad y la percepción con una narrativa revolucionaria."),
+                new Pelicula("Babylon",
+                        "https://pics.filmaffinity.com/babylon-747027954-mmed.jpg",
+                        "Un retrato excesivo y desenfrenado de la época dorada de Hollywood, donde los sueños y las ambiciones se entrelazan con el caos, la fama y la decadencia en los primeros años del cine sonoro.",
+                        6.4, 6.5, 56),
 
-                new Pelicula("Persepolis",
-                        "https://pics.filmaffinity.com/persepolis-701715841-mmed.jpg",
-                        "Una animación autobiográfica sobre crecer en Irán durante la revolución islámica."),
+                new Pelicula("Prisoners",
+                        "https://pics.filmaffinity.com/prisoners-721879978-mmed.jpg",
+                        "Un angustioso thriller sobre la desesperada búsqueda de dos niñas desaparecidas y hasta dónde puede llegar un padre impulsado por el dolor y la desesperanza, en una historia llena de giros y tensión.",
+                        7.9, 8.0, 81),
 
-                new Pelicula("El gran dictador",
-                        "https://pics.filmaffinity.com/the_great_dictator-416205081-mmed.jpg",
-                        "Chaplin satiriza a Hitler en una crítica poderosa al totalitarismo y la guerra."),
+                new Pelicula("Drive",
+                        "https://pics.filmaffinity.com/drive-467825966-mmed.jpg",
+                        "Un estilizado thriller de acción que sigue a un conductor profesional, misterioso y solitario, atrapado en un mundo criminal, donde la violencia brutal contrasta con una narrativa íntima y minimalista.",
+                        7.6, 7.8, 93),
 
-                new Pelicula("Parásitos",
-                        "https://pics.filmaffinity.com/gisaengchung-432616131-mmed.jpg",
-                        "Una crítica social surcoreana que mezcla drama y comedia negra con una narrativa brutal."),
+                new Pelicula("Whiplash",
+                        "https://pics.filmaffinity.com/whiplash-344887410-mmed.jpg",
+                        "Una poderosa exploración de la ambición y la presión extrema en el mundo de la música, donde un joven baterista se enfrenta a un despiadado profesor que lo empuja más allá de sus límites.",
+                        8.4, 8.5, 94),
 
-                new Pelicula("Roma",
-                        "https://pics.filmaffinity.com/rome-207781021-mmed.jpg",
-                        "Un retrato íntimo de la vida cotidiana en el México de los años 70."),
-
-                new Pelicula("La caza",
-                        "https://pics.filmaffinity.com/the_hunt_for_red_october-206170798-mmed.jpg",
-                        "Un drama danés que explora cómo una mentira puede destruir una vida."),
-
-                new Pelicula("La bicicleta verde",
-                        "https://pics.filmaffinity.com/wadjda-198857857-mmed.jpg",
-                        "Primera película rodada íntegramente en Arabia Saudí y dirigida por una mujer."),
-
-                new Pelicula("Incendies",
-                        "https://pics.filmaffinity.com/incendies-245390654-mmed.jpg",
-                        "Un viaje intenso al pasado familiar y al conflicto civil en Oriente Medio.")
+                new Pelicula("Redención",
+                        "https://pics.filmaffinity.com/southpaw-186068978-mmed.jpg",
+                        "Una emotiva historia de lucha, caída y redención que sigue a un boxeador campeón mientras intenta reconstruir su vida personal y profesional tras una tragedia devastadora.",
+                        6.8, 7.0, 60)
         ));
 
+
+        peliculasVisibles.addAll(peliculas);
+
         recyclerView = findViewById(R.id.recycled);
-        AdaptadorRV adaptador = new AdaptadorRV(this, peliculas,this);
+        adaptador = new AdaptadorRV(this, peliculasVisibles, this);
         recyclerView.setAdapter(adaptador);
-//        GridLayoutManager gridLayoutManager = new GridLayoutManager(this,2);
-//        recyclerView.setLayoutManager(gridLayoutManager);
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(linearLayoutManager);
         order = findViewById(R.id.order);
-        anyadir = findViewById(R.id.anyadirButton);
 
         ItemTouchHelper ith = new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(ItemTouchHelper.UP | ItemTouchHelper.DOWN, ItemTouchHelper.LEFT) {
-
             @Override
             public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, @NonNull RecyclerView.ViewHolder target) {
                 int posIni = viewHolder.getAdapterPosition();
                 int posFin = target.getAdapterPosition();
-                Pelicula pelicula = peliculas.remove(posIni);
-                peliculas.add(posFin, pelicula);
-                recyclerView.getAdapter().notifyItemMoved(posIni,posFin);
+                Pelicula pelicula = peliculasVisibles.remove(posIni);
+                peliculasVisibles.add(posFin, pelicula);
+                recyclerView.getAdapter().notifyItemMoved(posIni, posFin);
                 return true;
             }
 
             @Override
             public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
                 int posIni = viewHolder.getAdapterPosition();
-                Pelicula pelicula = peliculas.remove(posIni);
-                recyclerView.getAdapter().notifyItemRemoved(posIni);
-                if (pelicula.getNombre().equals("España")){
-                    Snackbar.make(recyclerView,"¿¿¿PERO TU DE QUE VAS??? ARRIBA ESPAÑÑÑAAAAAAA",Snackbar.LENGTH_LONG).show();
-                    for (int i = 0; i < 2000; i++) {
-                        peliculas.add(0, pelicula);
-                    }
+                Pelicula pelicula = peliculasVisibles.get(posIni);
 
-                }else{
-
-                    Snackbar.make(recyclerView,"Fuck "+ pelicula.getNombre(),Snackbar.LENGTH_LONG).setAction("Deshacer", new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            peliculas.add(posIni, pelicula);
-                            recyclerView.getAdapter().notifyDataSetChanged();
-                        }
-                    }).show();
+                if (peliculasFavoritas.contains(pelicula)) {
+                    recyclerView.getAdapter().notifyItemChanged(posIni);
+                    Snackbar.make(recyclerView, pelicula.getNombre() + " ya está en favoritos.", Snackbar.LENGTH_SHORT)
+                            .setAction("Eliminar de favoritos", new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    peliculasFavoritas.remove(pelicula);
+                                    adaptador.notifyDataSetChanged();
+                                }
+                            }).show();
+                } else {
+                    peliculasFavoritas.add(pelicula);
+                    recyclerView.getAdapter().notifyItemChanged(posIni);
+                    Snackbar.make(recyclerView, pelicula.getNombre() + " añadida a favoritos.", Snackbar.LENGTH_LONG)
+                            .setAction("Deshacer", new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    peliculasFavoritas.remove(pelicula);
+                                    adaptador.notifyDataSetChanged();
+                                }
+                            }).show();
                 }
             }
         });
+
         ith.attachToRecyclerView(recyclerView);
 
         order.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
-            public void onCheckedChanged(CompoundButton compoundButton, boolean isChecked) {
-                if (isChecked){
-                    order.setText("Desordenado");
-                    Collections.sort(peliculas);
-                }else {
-                    order.setText("Ordenado");
-                    Collections.shuffle(peliculas);
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                peliculasVisibles.clear();
+                if (isChecked) {
+                    peliculasVisibles.addAll(peliculasFavoritas);
+                    order.setText("Favoritos");
+                } else {
+                    peliculasVisibles.addAll(peliculas);
+                    order.setText("Todos");
                 }
                 adaptador.notifyDataSetChanged();
             }
         });
-
-        ActivityResultLauncher activityResult = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),result ->{
-
-            if (result.getResultCode()==Activity.RESULT_OK){
-                Pelicula pelicula = (Pelicula) result.getData().getExtras().getSerializable("pais");
-                peliculas.add(pelicula);
-                adaptador.notifyItemInserted(peliculas.size()-1);
-            } else {
-                Toast.makeText(context, "Operación de alta cancelada", Toast.LENGTH_SHORT).show();
-            }
-
-        });
-        anyadir.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(context, AnyadirPelicula.class);
-                activityResult.launch(intent);
-            }
-        });
-
     }
 
     @Override
     public void onClick(View view) {
         int posicion = recyclerView.getChildAdapterPosition(view);
-        Pelicula pelicula = peliculas.get(posicion);
+        Pelicula pelicula = peliculasVisibles.get(posicion);
         Intent intent = new Intent(this, InfoPeliculas.class);
-        intent.putExtra("pais", pelicula);
-
+        intent.putExtra("pelicula", pelicula);
         startActivity(intent);
-
     }
-
 }
